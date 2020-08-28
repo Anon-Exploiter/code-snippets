@@ -1,6 +1,6 @@
 ## (Personal) Code Snippets
 
-A github repo maintaining (mostly) python code snippets which I use approximately daily and to save time searching for them in local source code/via google. 
+A github repo maintaining mostly (python) code snippets which I use approximately daily and to save time searching for them in local source code/via google. 
 
 ---
 
@@ -205,4 +205,23 @@ def main():
 
 if __name__ == '__main__':
 	main()
+```
+
+---
+
+#### Uploading files to Slack `channels` through `Bot` using `cURL` with `OAuth Access Token`
+
+```bash
+curl -v -i -s -k -X $'POST' \
+-H $'Host: slack.com' \
+-H $'Accept: */*' \
+-H $'User-Agent: Mozilla/5.0 (X11; Linux x86_64)' \
+-H $'Origin: https://api.slack.com' \
+-H $'Sec-Fetch-Site: same-site' \
+-H $'Sec-Fetch-Mode: cors' \
+-H $'Sec-Fetch-Dest: empty' \
+-H $'Accept-Language: en-US,en;q=0.9,la;q=0.8' \
+-H $'Connection: close' \
+-F file=@backup.7z \
+  $'https://slack.com/api/files.upload?token=xoxp-xxx-xxx-xxx-xxxx&channels=myFiles&pretty=1'
 ```
