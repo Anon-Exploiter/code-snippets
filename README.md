@@ -225,3 +225,41 @@ curl -v -i -s -k -X $'POST' \
 -F file=@backup.7z \
   $'https://slack.com/api/files.upload?token=xoxp-xxx-xxx-xxx-xxxx&channels=myFiles&pretty=1'
 ```
+
+---
+
+#### Creating commands for downloading torrent files, one at a time with aria2c, upload on gdrive, **remove some stuff**
+Created for myself, read the code before using it!
+
+```python3
+from sys import argv
+import os
+
+gDdriveID   = argv[2]
+bucket      = argv[2]
+
+def returnIdAndName(torrentFile, grep):
+    command         = f"aria2c --show-files {torrentFile}"
+    results         = os.popen(command).read().strip().split("\n")
+
+    res             = []
+
+    for data in results:
+        if grep in data:
+            res.append(data)
+
+    for stuff in res:
+        count, fileNames = stuff.strip().split("|")
+        command     = f"set -x && aria2c --seed-time=0 --max-upload-limit=1K --seed-ratio=0.0 --select-file {count} {argv[1]} && gupload -r {gDdriveID}\"{fileNames}\" && rm -rfv *"
+        # command   = f"set -x && aria2c --file-allocation=none --seed-time=0 --max-upload-limit=1K --seed-ratio=0.0 --select-file {count} {argv[1]} && aws s3 cp \"{fileNames}\" \"s3://{bucket}/\" --endpoint-url=https://s3.wasabisys.com --no-sign-request && rm -rfv *"
+        print(command)
+
+def main():
+    torrentFile     = argv[1]
+    grep            = ".mkv"
+
+    returnIdAndName(torrentFile, grep)
+
+if __name__ == '__main__':
+    main()
+```
