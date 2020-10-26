@@ -250,7 +250,7 @@ def returnIdAndName(torrentFile, grep):
 
     for stuff in res:
         count, fileNames = stuff.strip().split("|")
-        command     = f"set -x && aria2c --seed-time=0 --max-upload-limit=1K --seed-ratio=0.0 --select-file {count} {argv[1]} && gupload -r {gDdriveID}\"{fileNames}\" && rm -rfv *"
+        command     = f"set -x && aria2c --seed-time=0 --max-upload-limit=1K --seed-ratio=0.0 --select-file {count} {argv[1]} && gupload -r {gDdriveID}\" {fileNames}\" && rm -rfv *"
         # command   = f"set -x && aria2c --file-allocation=none --seed-time=0 --max-upload-limit=1K --seed-ratio=0.0 --select-file {count} {argv[1]} && aws s3 cp \"{fileNames}\" \"s3://{bucket}/\" --endpoint-url=https://s3.wasabisys.com --no-sign-request && rm -rfv *"
         print(command)
 
