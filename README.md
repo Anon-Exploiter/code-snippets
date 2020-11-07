@@ -263,3 +263,12 @@ def main():
 if __name__ == '__main__':
     main()
 ```
+
+---
+
+#### Preventing certificate warning with requests/urllib3 while using proxy
+
+```python3
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+```
