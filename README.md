@@ -286,3 +286,19 @@ sudo apt-get -y update && \
     sudo apt-get -y install docker-ce docker-ce-cli containerd.io && \
     sudo usermod -aG docker $USER
 ```
+
+---
+
+#### Downloading PDFs (lectures) from Virtual University
+
+```python3
+import requests
+import os
+
+for lesson in range(1, 22 + 1):
+    url     = f'https://vulms.vu.edu.pk/Courses/PHY101/Lessons/Lesson_{lesson}/Lecture{str(lesson).zfill(2)}.pdf'
+    print(url)
+
+    command = f'aria2c -s 10 -j 10 -x 16 -c --file-allocation=none "{url}"'
+    os.system(command)
+```
