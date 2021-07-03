@@ -313,36 +313,79 @@ for lesson in range(1, 22 + 1):
 
 from sys import argv
 from os import popen
+
 import json
+import argparse
 
 
-def getMfaSerial():
-    command     = "aws iam list-mfa-devices --query MFADevices[*].SerialNumber"
-    mfaSerial   = json.loads(popen(command).read())[0]
-    return(mfaSerial)
+def getMfaSerial(profile):
+    if profile == None:
+        command     = "aws iam list-mfa-devices --query MFADevices[*].SerialNumber"
+
+    else:
+        command     = f"aws iam list-mfa-devices --query MFADevices[*].SerialNumber --profile {profile}"
+
+    try:
+        mfaSerial   = json.loads(popen(command).read())
+        return(mfaSerial[0])
+
+    except IndexError:
+        print("[!] Wrong MFA token for the wrong profile? Maybe?")
+        exit(1)
 
 
-def getSessionTokens(mfaSerial):
-    try: 
-        command     = f"aws sts get-session-token --serial-number {mfaSerial} --token {argv[1]}"
+def getSessionTokens(profile, mfaSerial, mfaToken):
+    try:
+        if profile == None:
+            command     = f"aws sts get-session-token --serial-number {mfaSerial} --token {mfaToken}"
+
+        else:
+            command     = f"aws sts get-session-token --serial-number {mfaSerial} --token {mfaToken} --profile {profile}"
+
         token       = json.loads(popen(command).read())["Credentials"]
         return(token)
 
     except json.decoder.JSONDecodeError:
         exit('[!] Please enter correct MFA!')
 
-    except IndexError:
-        exit(f'[!] Please enter MFA:\n:~$ {argv[0]} 123456')
-    
+
+def addArguments():
+    parser = argparse.ArgumentParser(description='', usage=f'\r[#] Usage: getSTSToken --mfa 123456 --profile default')
+    parser._optionals.title = "Basic Help"
+
+    opts = parser.add_argument_group(f'Arguments')
+    opts.add_argument('-m', '--mfa',     action="store", dest="mfa",     default=False, help='MFA of the user account')
+    opts.add_argument('-p', '--profile', action="store", dest="profile", default=False, help='Access keys profile ( -> default if none given)')
+
+    args = parser.parse_args()
+    return(args, parser)
+
 
 def main():
-    mfaSerial       = getMfaSerial()
-    sessionTokens   = getSessionTokens(mfaSerial)
-    print(f"export AWS_ACCESS_KEY_ID={sessionTokens['AccessKeyId']}")
-    print(f"export AWS_SECRET_ACCESS_KEY={sessionTokens['SecretAccessKey']}")
-    print(f"export AWS_SESSION_TOKEN={sessionTokens['SessionToken']}")
+    args, parser = addArguments()
+
+    if args.mfa:
+        mfa = int(args.mfa)
+
+        if args.profile:
+            profile = args.profile
+
+        else:
+            profile = None
+
+        mfaSerial       = getMfaSerial(profile)
+        sessionTokens   = getSessionTokens(profile, mfaSerial, mfa)
+
+        print(f"export AWS_ACCESS_KEY_ID={sessionTokens['AccessKeyId']}")
+        print(f"export AWS_SECRET_ACCESS_KEY={sessionTokens['SecretAccessKey']}")
+        print(f"export AWS_SESSION_TOKEN={sessionTokens['SessionToken']}")
+
+    else:
+        parser.print_help()
+        exit()
 
 
 if __name__ == '__main__':
     main()
+
 ```
