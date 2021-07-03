@@ -302,3 +302,47 @@ for lesson in range(1, 22 + 1):
     command = f'aria2c -s 10 -j 10 -x 16 -c --file-allocation=none "{url}"'
     os.system(command)
 ```
+
+---
+
+#### Getting STS tokens with export= for CLI - Add in $PATH
+
+```python3
+#!/usr/bin/python3
+
+
+from sys import argv
+from os import popen
+import json
+
+
+def getMfaSerial():
+    command     = "aws iam list-mfa-devices --query MFADevices[*].SerialNumber"
+    mfaSerial   = json.loads(popen(command).read())[0]
+    return(mfaSerial)
+
+
+def getSessionTokens(mfaSerial):
+    try: 
+        command     = f"aws sts get-session-token --serial-number {mfaSerial} --token {argv[1]}"
+        token       = json.loads(popen(command).read())["Credentials"]
+        return(token)
+
+    except json.decoder.JSONDecodeError:
+        exit('[!] Please enter correct MFA!')
+
+    except IndexError:
+        exit(f'[!] Please enter MFA:\n:~$ {argv[0]} 123456')
+    
+
+def main():
+    mfaSerial       = getMfaSerial()
+    sessionTokens   = getSessionTokens(mfaSerial)
+    print(f"export AWS_ACCESS_KEY_ID={sessionTokens['AccessKeyId']}")
+    print(f"export AWS_SECRET_ACCESS_KEY={sessionTokens['SecretAccessKey']}")
+    print(f"export AWS_SESSION_TOKEN={sessionTokens['SessionToken']}")
+
+
+if __name__ == '__main__':
+    main()
+```
