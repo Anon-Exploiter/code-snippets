@@ -389,3 +389,15 @@ if __name__ == '__main__':
     main()
 
 ```
+
+---
+
+#### Creating layer for AWS Lambda function
+
+```bash
+mkdir -p python && \
+	cd python && \
+	pip install -r ../requirements.txt -t . && \
+	cd ../ && \
+	zip -rv python.zip python/
+```
