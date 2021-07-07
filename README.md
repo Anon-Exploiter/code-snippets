@@ -401,3 +401,19 @@ mkdir -p python && \
 	cd ../ && \
 	zip -rv python.zip python/
 ```
+
+---
+
+#### Cleaning WSL2 storage after deletion of files (Home edition)
+
+```powershell
+wsl --shutdown
+diskpart
+
+select vdisk file="C:\Users\Syed Umar Arfeen\AppData\Local\Packages\CanonicalGroupLimited.Ubuntu20.04onWindows_79rhkp1fndgsc\LocalState\ext4.vhdx"
+attach vdisk readonly
+
+compact vdisk
+detach vdisk
+exit
+```
