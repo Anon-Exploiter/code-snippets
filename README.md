@@ -418,6 +418,8 @@ detach vdisk
 exit
 ```
 
+---
+
 #### Python Progressbar2 with requests
 
 ```bash
