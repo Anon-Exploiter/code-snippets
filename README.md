@@ -417,3 +417,41 @@ compact vdisk
 detach vdisk
 exit
 ```
+
+#### Python Progressbar2 with requests
+
+```bash
+pip install progressbar2
+```
+
+```python3
+import progressbar
+import requests
+
+
+progressbar.streams.wrap_stderr()
+
+
+def makeRequest(url, path):
+    response = requests.get(
+        url + path
+    )
+
+    if response.status_code == 200:
+        print(f"[#] {url}{path} -> {response.status_code}")
+
+
+def main():
+    PATHS = ['/admin', '/adm', '/ad', '/admn', '/a', '/amin', '/ain', '/an', '/dmin', '/post', '/in', '/din', '/amin', '/dmin', '/din', '', '/amin', '/dmin', '/din', '/admi']
+
+    URL = 'https://umar0x01.sh'
+
+    print("[$] Starting direnum...\n")
+
+    for pths, i in zip(PATHS, progressbar.progressbar(range(len(PATHS) - 1), redirect_stdout=True)):
+        makeRequest(URL, pths)
+
+
+if __name__ == '__main__':
+    main()
+```
