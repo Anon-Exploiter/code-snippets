@@ -457,3 +457,11 @@ def main():
 if __name__ == '__main__':
     main()
 ```
+
+---
+
+#### Getting all IPs in a CIDR range using python
+
+```bash
+for ips in ipaddress.ip_network('192.168.100.0/24'): print(ips)
+```
