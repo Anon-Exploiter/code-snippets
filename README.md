@@ -465,3 +465,26 @@ if __name__ == '__main__':
 ```bash
 for ips in ipaddress.ip_network('192.168.100.0/24'): print(ips)
 ```
+
+---
+
+#### Youtube playlist reverse -- python3
+
+```python3
+import os
+
+playlist 	= "https://www.youtube.com/c/.../videos"
+command 	= f"youtube-dl -j --flat-playlist --playlist-reverse {playlist} | jq -r '.id' | sed 's_^_https://youtu.be/_'"
+print(command)
+print()
+
+output 		= os.popen(command).read()
+print(output)
+
+ytUrls 		= []
+
+for count, urls in zip(range(1, 100000), output.strip().split("\n")):
+	count 	= str(count).zfill(3)
+	cmd 	= f'youtube-dl -f mp4 -i -v -R 3 --fragment-retries 3 -c -o "{count} - %(title)s.%(ext)s" {urls} --external-downloader "aria2c" --external-downloader-args "-j 10 -s 10 -x 16 --file-allocation=none -c"'
+	print(cmd)
+```
