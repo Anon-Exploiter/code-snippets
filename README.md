@@ -4,6 +4,33 @@ A github repo maintaining mostly (python) code snippets which I use approximatel
 
 ---
 
+#### Creating S3 presigned url with 1 hour expiration time
+
+```python3
+import boto3
+import botocore
+
+
+def s3ClientCall():
+    return boto3.client('s3')
+
+
+clientCall      = s3ClientCall()
+
+bucketName = 'test-bucket'
+objectName = 'secret.txt'
+
+presignedURL    = clientCall.generate_presigned_url('get_object',
+    Params      = {
+        'Bucket': bucketName,
+        'Key': objectName
+    },
+		ExpiresIn   = 3600
+)
+
+print(presignedURL)
+```
+
 #### Usage of multiprocessing in Python3
 
 ```python3
