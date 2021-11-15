@@ -541,3 +541,25 @@ VS Code config file:
     ]
 }
 ```
+
+---
+
+#### Basic frida code to bypass root check (owasp uncrackable 1-2)
+
+```javascript
+Java.perform(function() {
+    var root_lib = Java.use('sg.vantagepoint.a.b');
+
+    root_lib.a.implementation = function() {
+        return false;
+    }
+
+    root_lib.b.implementation = function() {
+        return false;
+    }
+
+    root_lib.c.implementation = function() {
+        return false;
+    }
+})
+```
