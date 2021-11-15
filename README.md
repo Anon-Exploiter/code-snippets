@@ -595,3 +595,54 @@ class RaceCondition {
     }
 }
 ```
+
+---
+
+#### Decrypting AES encrypted b64 encoded string when you've to convert IV/SecretKey into bytes
+
+```java
+import java.security.MessageDigest;
+import java.security.spec.AlgorithmParameterSpec;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+import java.nio.charset.StandardCharsets;
+
+class LayerTwo {
+    static byte[] decrypt_text(byte[] ivBytes, byte[] keyBytes, byte[] bytes) throws Exception {
+        AlgorithmParameterSpec ivSpec = new IvParameterSpec(ivBytes);
+        SecretKeySpec newKey = new SecretKeySpec(keyBytes, "AES");
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+
+        cipher.init(2, newKey, ivSpec);
+        return cipher.doFinal(bytes);
+    }
+
+    public static byte[] decrypt(String ivStr, String keyStr, String base64_text) throws Exception {
+        byte[] base64_text_decoded = Base64.getDecoder().decode(base64_text);
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        md.update(ivStr.getBytes());
+
+        byte[] ivBytes = md.digest();
+        MessageDigest sha = MessageDigest.getInstance("SHA-256");
+        sha.update(keyStr.getBytes());
+        return decrypt_text(ivBytes, sha.digest(), base64_text_decoded);
+    }
+
+    public static void main(String[] args) {
+        try {
+            // Ip address
+            // "admin_name":"Sm0e+2JxJqOeXWQo0ZdZiQ==","admin_pass":"w9SEXEWvemvKS3PdVvfKBQ=="
+            String ip_address = "9I3aP8MS/VKnzPKbx7swGxaMfaoGF0GEbSq64KZFsyg=";
+            byte[] decrypted_text = decrypt("Lahore", "WelcomeToLahore", ip_address);
+            String decryted_text_into_string = new String(decrypted_text, StandardCharsets.UTF_8);
+            System.out.println(decryted_text_into_string);
+        }
+
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
