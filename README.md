@@ -563,3 +563,35 @@ Java.perform(function() {
     }
 })
 ```
+
+---
+
+#### Basic Java code to decrypt AES encrypted base64 encoded string with IV/Key
+
+```java
+import java.io.PrintStream;
+import java.util.Base64;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+class RaceCondition {
+    public static String decrypt(String valueData) {
+        try {
+            IvParameterSpec iv = new IvParameterSpec("fedcba9876543210".getBytes("UTF-8"));
+            SecretKeySpec skeySpec = new SecretKeySpec("0123456789abcdef".getBytes("UTF-8"), "AES");
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(2, skeySpec, iv);
+            byte[] temp = Base64.getDecoder().decode(valueData);
+            return new String(Base64.getDecoder().decode(cipher.doFinal(temp)));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println(decrypt("sqCDT4L+YF5hHNPj9hTgzWuuyXOTFruD8LfbyIs/nlYgeaVZMWZmXeQknnHzAQhKCdREPXfXAX3nSp1HgFJmKw=="));
+    }
+}
+```
