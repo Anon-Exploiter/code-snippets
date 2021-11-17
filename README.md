@@ -646,3 +646,18 @@ class LayerTwo {
     }
 }
 ```
+
+---
+
+#### Frida snippet to intercept remove syscall from native library of android and return 000 (so file doesn't get deleted) - By Mukarram bhai
+
+```javascript
+Interceptor.attach(Module.getExportByName('libnative-lib.so', 'remove'), {
+    onEnter: function (args) {
+        args[0] = ptr('000');
+    },
+    onLeave: function (retval) {
+        console.log("++++++++++++++++++++++");
+    }
+});
+```
