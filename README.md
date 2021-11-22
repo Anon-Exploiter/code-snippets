@@ -566,6 +566,49 @@ Java.perform(function() {
 
 ---
 
+#### Frida code to run an imported method from native library by hooking onCreate and calling it with it's parameters -- CC: @makman
+
+```javascript
+Java.perform(function () {
+    var MainActivity = Java.use('com.example.application.MainActivity');
+    MainActivity.onCreate.implementation = function (paramBundle) {
+        console.log("\n[+] Inside onCreate\n");
+        console.log(this.stringFromJNI());
+        this.onCreate(paramBundle);
+    };
+});
+```
+
+---
+
+#### PHP code to decode a XOR base64 encoded string while having the key (retrieved from the native method from android application) -- CC: @makman
+
+```php
+<?php
+
+$secret = 'XUBBUkRfQ3xyUnt5THxdX28IAQ0CZm8LVnBteXBacwdAFW8LCAYDTA==';
+
+$secret = base64_decode($secret);
+
+$secret_length = strlen($secret);
+
+$key = '842109';
+$key_length = strlen($key);
+
+$flag = [];
+
+for ($i = 0; $i < $secret_length; $i++) {
+    $single = $secret[$i];
+    $flag[] = $key[$i % $key_length] ^ $single;
+}
+
+echo implode('', $flag);
+
+?>
+```
+
+---
+
 #### Basic Java code to decrypt AES encrypted base64 encoded string with IV/Key
 
 ```java
@@ -649,7 +692,7 @@ class LayerTwo {
 
 ---
 
-#### Frida snippet to intercept remove syscall from native library of android and return 000 (so file doesn't get deleted) - By Mukarram bhai
+#### Frida snippet to intercept remove syscall from native library of android and return 000 (so file doesn't get deleted) -- CC: @makman
 
 ```javascript
 Interceptor.attach(Module.getExportByName('libnative-lib.so', 'remove'), {
