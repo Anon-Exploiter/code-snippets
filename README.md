@@ -704,3 +704,29 @@ Interceptor.attach(Module.getExportByName('libnative-lib.so', 'remove'), {
     }
 });
 ```
+
+---
+
+#### Execute commands in a file with multiprocessing (like downloading of videos using aria2c)
+
+```python3
+#!/usr/bin/env python3
+# ./exec.py commands.sh 5
+
+import concurrent.futures
+from time import sleep
+from sys import argv
+from os import system
+
+PROCESSES   = int(argv[2])
+
+with open(argv[1], 'r') as f:
+    commands = f.read().strip().split("\n")
+
+def execute_command(cmd):
+    print(cmd)
+    system(cmd)
+
+with concurrent.futures.ProcessPoolExecutor(max_workers = PROCESSES) as executor:
+    executor.map(execute_command, commands)
+```
