@@ -728,3 +728,31 @@ def execute_command(cmd):
 with concurrent.futures.ProcessPoolExecutor(max_workers = PROCESSES) as executor:
     executor.map(execute_command, commands)
 ```
+
+---
+
+#### Generate wordlist using crunch containing uppercase, lowercase, and digits of upto 4-5 placeholders (5.2 GB)
+
+```bash
+crunch 4 5 -f /usr/share/crunch/charset.lst mixalpha-numeric -o charlist.txt
+```
+
+---
+
+#### Generate wordlist using python3 containing uppercase, lowercase, and digits upto specific characters (custom stop)
+```python3
+import random
+import string
+
+characters = 5
+
+with open('wordlist.txt', 'a+') as f:
+	while True:
+		f.write( f"{''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=characters))}\n" )
+```
+
+Run it with:
+```bash
+python3 gen.py
+cat wordlist.txt | sort | uniq > sort_uniq_wordlist_5chars.txt
+```
