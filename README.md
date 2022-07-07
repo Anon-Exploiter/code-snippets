@@ -295,6 +295,35 @@ if __name__ == '__main__':
 
 ---
 
+#### Matching a element in two JSON files and printing out latter's objects based on match
+
+```python
+import json
+
+with open("new.json", "r", encoding="utf-8") as f:
+    new_json = json.loads(f.read().strip())
+
+with open("old.json", "r", encoding="utf-8") as f:
+    old_json = json.loads(f.read().strip())
+
+course_names = []
+to_write = []
+
+for elem in new_json:
+    course_names.append(elem["name"])
+
+for elements in old_json:
+    old_names = elements["name"]
+
+    for names in course_names:
+        if names == old_names:
+            to_write.append(elements)
+
+print(json.dumps(to_write, indent=4))
+```
+
+---
+
 #### Uploading files to Slack `channels` through `Bot` using `cURL` with `OAuth Access Token`
 
 ```bash
