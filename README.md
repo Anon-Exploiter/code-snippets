@@ -59,6 +59,26 @@ def handleResponse(req, interesting):
                 f.write(req.response)
 ```
 
+#### Send same requests indefinitely using Turbo intruder
+```python3
+def queueRequests(target, wordlists):
+    engine = RequestEngine(endpoint=target.endpoint,
+                           concurrentConnections=100,
+                           requestsPerConnection=1000,
+                           pipeline=False,
+                           maxRetriesPerRequest=0,
+                           engine=Engine.THREADED
+                           )
+    word = "test"
+    while True:
+        engine.queue(target.req, word.rstrip())
+
+
+def handleResponse(req, interesting):
+    if '500' in req.response:
+        table.add(req)
+```
+
 ---
 
 #### Creating S3 presigned url with 1 hour expiration time
