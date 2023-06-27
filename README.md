@@ -4,6 +4,19 @@ A github repo maintaining mostly (python) code snippets which I use approximatel
 
 ---
 
+#### Find all the .plists in the local directory and write into one
+
+```bash
+for files in $(find . -name '*.plist'); do
+	echo  >> plists.xml
+	echo $files >> plists.xml
+	echo  >> plists.xml
+	plistutil -i $files  >> plists.xml
+done
+```
+
+---
+
 #### Selenium auto install, parse, and fetch g-recaptcha response from page
 
 ```python3
