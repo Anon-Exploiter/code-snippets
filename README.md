@@ -51,6 +51,20 @@ print(captcha_text.get_attribute('value'))
 
 ---
 
+#### Convert .HEIC to .jpg using python and linux
+
+```python3
+import os 
+
+for files in os.listdir():
+	if ".HEIC" in files:	
+		command = f"heif-convert {files} {files.replace('.HEIC', '.jpg')}"
+		print(command)
+		os.system(command)
+```
+
+---
+
 #### Bruteforce wordlist using Turbo Intruder and write results in file
 ```python3
 def queueRequests(target, wordlists):
