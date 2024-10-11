@@ -1233,4 +1233,10 @@ ffmpeg -i poc.mp4 -vcodec libx264 -x264-params keyint=300:scenecut=0 out4.mp4
 
 # For decreasing the total frames
 ffmpeg -i poc.mp4 -vcodec libx264 -x264-params keyint=300:scenecut=0 -filter:v fps=fps=10 out3.mp4
+
+
+# For clipping the video from start to 01:30
+ffmpeg -i file.mp4 -t "00:01:30" -c copy file2.mp4
 ```
+
+
